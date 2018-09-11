@@ -5,4 +5,5 @@
    -controller.py runs the application and only holds code that reads the user input and runs the home page.
    -model.py holds most of the functions that make up the application. This doesn't need to be touched, but it is imported         from the controller.py file. 
    -orm.py contains a class that allowed me to make sqlite3 database changes without having to open and close the connection       over and over.
-   -view.py is a work in progress. I don't believe I call it in any functions, but the intention was to put all the repetitive     'view' related code in it.
+   -view.py is a work in progress. I don't believe I call it in any functions, but the intention was to put all the repetitive     'view' related code in it. 
+"""
