@@ -5,6 +5,7 @@ import requests
 from orm import Database
 import os
 import time
+import uuid
 
 def update_earnings(username):
 
@@ -36,13 +37,14 @@ def update_earnings(username):
 def create_login(username,password):
     with Database('Terminal.db') as db:
         password2 = input('Please confirm your password: ')
+        apikey = uuid.uuid4()
         if password == password2:
             create_admin = input('Would you like to make this user an admin?(Y/N): ')
             if create_admin.lower() == 'y':
-                db.cursor.execute("""INSERT INTO users(username,password,funds, earnings, admin) VALUES('{}','{}', 10000.0, 0.0, {});""".format(username,password,True))
+                db.cursor.execute("""INSERT INTO users(username,password,funds, earnings, apikey, admin) VALUES('{}','{}', 10000.0, 0.0, '{}', {});""".format(username,password, apikey, True))
                 return (username)
             elif create_admin.lower() == 'n':
-                db.cursor.execute("""INSERT INTO users(username,password,funds, earnings, admin) VALUES('{}','{}', 10000.0, 0.0, {});""".format(username,password,False))
+                db.cursor.execute("""INSERT INTO users(username,password,funds, earnings, apikey, admin) VALUES('{}','{}', 10000.0, 0.0, '{}', {});""".format(username,password, apikey, False))
                 return (username)
             else:
                 print('Please enter a Y or N')
@@ -189,34 +191,43 @@ def view_portfolio():
             print('User does not own any shares')
 
 
-def current_balance():
+def current_balance(username):
     with Database('Terminal.db') as db:
         try:
-            username = login()
             db.cursor.execute("""SELECT funds FROM users WHERE username='{}';""".format(username)
                              )
             funds = db.cursor.fetchone()
-            print('Your balance is currently ' + str(funds[0]))
+            return( str(funds[0]))
         except:
-            print('Could not find user')
+            return('Could not find user')
 
-def leaderboard():
+def leaderboard(username):
     with Database('Terminal.db') as db:
-        username = login()
         db.cursor.execute("""SELECT admin FROM users WHERE username='{}';""".format(username))
         admin_status = db.cursor.fetchone()[0]
-        if admin_status == True:
+        if admin_status:
             db.cursor.execute("""SELECT earnings FROM users ORDER BY earnings DESC;""")
             leaderearnings = db.cursor.fetchall()
             db.cursor.execute("""SELECT username FROM users ORDER BY earnings DESC;""")
             leaders = db.cursor.fetchall()
             print('The current standings are :')
             time.sleep(1)
+            listofleaders = []
             if len(leaders) <= 10:
                 for x in range(len(leaders)):
-                    print ('Rank:' + str(x+1) + ' is ' + str(leaders[x][0]) + ' with ' + str(leaderearnings[x][0]) + ' in earnings \n')
+                    listofleaders.append('Rank:' + str(x+1) + ' is ' + str(leaders[x][0]) + ' with ' + str(leaderearnings[x][0]) + ' in earnings \n')
             else:
                 for x in range(10):
-                    print ('Rank:' + str(x+1) + ' is ' + str(leaders[x][0]) + ' with ' + str(leaderearnings[x][0]) + ' in earnings \n')
+                    listofleaders.append('Rank:' + str(x+1) + ' is ' + str(leaders[x][0]) + ' with ' + str(leaderearnings[x][0]) + ' in earnings \n')
+            return listofleaders
         else:
-            print('You do not have admin status')
+            return('You do not have admin status')
+
+def api_authenticate(apikey):
+    with Database('Terminal.db') as db:
+        db.cursor.execute("""SELECT username FROM users WHERE apikey='{}';""".format(apikey))
+        username = db.cursor.fetchone()
+        if username:
+            return username[0]
+        else:
+            username = False
